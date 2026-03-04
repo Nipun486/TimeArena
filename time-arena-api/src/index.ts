@@ -7,13 +7,16 @@ import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
 import { connectDB } from "./config/db";
-
+import { login, register } from "./controllers/authController";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.post("/auth/register", register);
+app.post("/auth/login", login);
 
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({ ok: true, service: "time-arena-api" });
