@@ -229,3 +229,17 @@ Then open `http://localhost:3000` in your browser.
 11. time-arena-web →  src/app/tasks/[id]/page.jsx
 12. time-arena-web →  src/app/dashboard/page.jsx
 ```
+
+
+# Backend APIs
+
+1. http://localhost:7000/auth/register                => registration
+2. http://localhost:7000/auth/login                   => login
+
+3. http://localhost:7000/tasks                        => Create Task (POST, protected)
+4. http://localhost:7000/tasks                        => Get all tasks for current user (GET, protected)
+5. http://localhost:7000/tasks/:id                    => Get single task by id (GET, protected)
+6. http://localhost:7000/tasks/:id/start              => Start a pending task (POST, protected)
+7. http://localhost:7000/tasks/:id/subtasks/:sid/toggle => Toggle a subtask done/undone (POST, protected)
+8. http://localhost:7000/tasks/:id/complete           => Complete an in-progress task and score it (POST, protected)
+9. http://localhost:7000/tasks/:id                    => Delete a non-in-progress task (DELETE, protected)

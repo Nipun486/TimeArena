@@ -8,6 +8,16 @@ import dotenv from "dotenv";
 dotenv.config();
 import { connectDB } from "./config/db";
 import { login, register } from "./controllers/authController";
+import {
+  completeTask,
+  createTask,
+  deleteTask,
+  getAllTasks,
+  getTaskById,
+  startTask,
+  toggleSubtask,
+} from "./controllers/taskController";
+import { authMiddleware } from "./middleware/auth";
 
 const app = express();
 
@@ -17,6 +27,15 @@ app.use(express.urlencoded({ extended: true }));
 
 app.post("/auth/register", register);
 app.post("/auth/login", login);
+
+// Protected task routes
+app.post("/tasks", authMiddleware, createTask);
+app.get("/tasks", authMiddleware, getAllTasks);
+app.get("/tasks/:id", authMiddleware, getTaskById);
+app.post("/tasks/:id/start", authMiddleware, startTask);
+app.post("/tasks/:id/subtasks/:sid/toggle", authMiddleware, toggleSubtask);
+app.post("/tasks/:id/complete", authMiddleware, completeTask);
+app.delete("/tasks/:id", authMiddleware, deleteTask);
 
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({ ok: true, service: "time-arena-api" });
