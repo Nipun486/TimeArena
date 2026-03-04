@@ -1,0 +1,49 @@
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
+import { connectDB } from "./config/db";
+
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).json({ ok: true, service: "time-arena-api" });
+});
+
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({ error: "Not Found" });
+});
+
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  const message = err instanceof Error ? err.message : "Internal Server Error";
+  res.status(500).json({ error: message });
+});
+
+const port = Number(process.env.PORT ?? 7000);
+
+const startServer = async (): Promise<void> => {
+  try {
+    await connectDB();
+
+    app.listen(port, () => {
+      // eslint-disable-next-line no-console
+      console.log(`API listening on http://localhost:${port}`);
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to start server", error);
+    process.exit(1);
+  }
+};
+
+void startServer();
+
