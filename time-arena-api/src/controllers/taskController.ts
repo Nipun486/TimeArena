@@ -359,3 +359,15 @@ export async function deleteTask(req: Request, res: Response) {
   }
 }
 
+const taskController = {
+  getAllTasks,
+  createTask,
+  getTaskById,
+  startTask,
+  toggleSubtask,
+  completeTask,
+  deleteTask,
+};
+
+export default taskController;
+
