@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { User } from "../models/User.js";
-import { Task } from "../models/Task.js";
+import { User } from "../models/User";
+import { Task } from "../models/Task";
 
 interface AuthRequest extends Request {
   user?: {

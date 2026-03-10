@@ -1,15 +1,13 @@
 // Import core dependencies and application modules
 import express, { type Request, type Response } from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import {connectDB} from "./config/db.js";
-import authRoutes from "./routes/auth.js";
-import taskRoutes from "./routes/tasks.js";
-import userRoutes from "./routes/users.js";
-import leaderboardRoutes from "./routes/leaderboard.js";
+import dotenv from "dotenv/config";
+import {connectDB} from "./config/db";
+import authRoutes from "./routes/auth";
+import taskRoutes from "./routes/tasks";
+import userRoutes from "./routes/users";
+import leaderboardRoutes from "./routes/leaderboard";
 
-// Load environment variables from .env file
-dotenv.config();
 
 // Create the Express application instance
 const app = express();

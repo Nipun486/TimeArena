@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "../models/User.js";
+import { User } from "../models/User";
 
 /**
  * Returns a leaderboard of users ranked by total XP.

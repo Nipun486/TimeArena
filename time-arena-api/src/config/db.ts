@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
+import "dotenv/config"
 
 const mongoUri = process.env.MONGODB_URI as string;
+console.log(mongoUri);
+
 
 if (mongoUri == null || mongoUri.trim() === "") {
   throw new Error("MONGODB_URI is not defined in environment variables");
