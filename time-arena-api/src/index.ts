@@ -1,70 +1,69 @@
-import express, {
-  type NextFunction,
-  type Request,
-  type Response,
-} from "express";
+// Import core dependencies and application modules
+import express, { type Request, type Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config();
-import { connectDB } from "./config/db";
-import authRoutes from "./routes/auth";
-import {
-  completeTask,
-  createTask,
-  deleteTask,
-  getAllTasks,
-  getTaskById,
-  startTask,
-  toggleSubtask,
-} from "./controllers/taskController";
-import { authMiddleware } from "./middleware/auth";
+import {connectDB} from "./config/db.js";
+import authRoutes from "./routes/auth.js";
+import taskRoutes from "./routes/tasks.js";
+import userRoutes from "./routes/users.js";
+import leaderboardRoutes from "./routes/leaderboard.js";
 
+// Load environment variables from .env file
+dotenv.config();
+
+// Create the Express application instance
 const app = express();
 
-app.use(cors());
+// Configure CORS to allow the client application to communicate with this API
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+  }),
+);
+
+// Parse incoming JSON request bodies
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
+// Mount API routes
 app.use("/api/auth", authRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
-// Protected task routes
-app.post("/tasks", authMiddleware, createTask);
-app.get("/tasks", authMiddleware, getAllTasks);
-app.get("/tasks/:id", authMiddleware, getTaskById);
-app.post("/tasks/:id/start", authMiddleware, startTask);
-app.post("/tasks/:id/subtasks/:sid/toggle", authMiddleware, toggleSubtask);
-app.post("/tasks/:id/complete", authMiddleware, completeTask);
-app.delete("/tasks/:id", authMiddleware, deleteTask);
-
-app.get("/", (_req: Request, res: Response) => {
-  res.status(200).json({ ok: true, service: "time-arena-api" });
+// Simple health check route to verify that the server is running
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.status(200).json({ message: "Server is running" });
 });
 
-app.use((_req: Request, res: Response) => {
+// Handle unmatched routes with a generic 404 response
+app.use((_req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+// Global error handler to catch and respond to server errors
+app.use((err: unknown, _req: Request, res: Response) => {
   const message = err instanceof Error ? err.message : "Internal Server Error";
   res.status(500).json({ error: message });
 });
 
-const port = Number(process.env.PORT ?? 7000);
+// Determine the port to listen on, defaulting to 5000 if not specified
+const PORT = Number(process.env.PORT) || 5000;
 
-const startServer = async (): Promise<void> => {
+// Connect to the database and start the HTTP server
+(async (): Promise<void> => {
   try {
     await connectDB();
 
-    app.listen(port, () => {
+    app.listen(PORT, () => {
       // eslint-disable-next-line no-console
-      console.log(`API listening on http://localhost:${port}`);
+      console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error("Failed to start server", error);
+    console.error("Failed to connect to the database", error);
     process.exit(1);
   }
-};
-
-void startServer();
+})();
 
