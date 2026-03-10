@@ -20,21 +20,27 @@ const toUtcDateString = (date: Date): string => {
  * Get the authenticated user's profile with selected fields.
  * Returns basic user info without sensitive fields like password.
  */
-export const getMe = async (req: AuthRequest, res: Response) => {
+export const getMe = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
 
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       id: user._id,
       username: user.username,
       email: user.email,
@@ -43,11 +49,13 @@ export const getMe = async (req: AuthRequest, res: Response) => {
       longestStreak: user.longestStreak,
       createdAt: user.createdAt,
     });
+    return;
   } catch (err: any) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Server error",
       error: err.message,
     });
+    return;
   }
 };
 
@@ -56,12 +64,17 @@ export const getMe = async (req: AuthRequest, res: Response) => {
  * Returns aggregated statistics such as weekly scores, completion rate,
  * focus hours, consistency score, and task breakdowns.
  */
-export const getAnalytics = async (req: AuthRequest, res: Response) => {
+export const getAnalytics = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.id;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
 
     const now = new Date();
@@ -182,7 +195,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
 
     const consistencyScore = Math.round((activeDays.size / 7) * 100);
 
-    return res.status(200).json({
+    res.status(200).json({
       weeklyScores,
       completionRate,
       focusHours,
@@ -191,11 +204,18 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
       tasksByStatus,
       totalTasksThisWeek,
     });
+    return;
   } catch (err: any) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Server error",
       error: err.message,
     });
+    return;
   }
+};
+
+export default {
+  getMe,
+  getAnalytics,
 };
 
