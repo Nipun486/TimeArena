@@ -7,7 +7,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
 import { connectDB } from "./config/db";
-import { login, register } from "./controllers/authController";
+import authRoutes from "./routes/auth";
 import {
   completeTask,
   createTask,
@@ -25,8 +25,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/auth/register", register);
-app.post("/auth/login", login);
+app.use("/api/auth", authRoutes);
 
 // Protected task routes
 app.post("/tasks", authMiddleware, createTask);
