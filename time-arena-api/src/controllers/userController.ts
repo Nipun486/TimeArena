@@ -1,11 +1,15 @@
+import type { JwtPayload } from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { User } from "../models/User";
 import { Task } from "../models/Task";
 
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-  };
+function getUserIdFromJwt(req: Request): string | undefined {
+  const u = req.user;
+  if (u && typeof u === "object") {
+    const o = u as JwtPayload & { id?: string; userId?: string };
+    return o.id ?? o.userId;
+  }
+  return undefined;
 }
 
 const toUtcDateString = (date: Date): string => {
@@ -25,8 +29,7 @@ export const getMe = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const authReq = req as AuthRequest;
-    const userId = authReq.user?.id;
+    const userId = getUserIdFromJwt(req);
 
     if (!userId) {
       res.status(401).json({ message: "Unauthorized" });
@@ -69,8 +72,7 @@ export const getAnalytics = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const authReq = req as AuthRequest;
-    const userId = authReq.user?.id;
+    const userId = getUserIdFromJwt(req);
 
     if (!userId) {
       res.status(401).json({ message: "Unauthorized" });

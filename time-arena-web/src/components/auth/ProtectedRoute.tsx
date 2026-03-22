@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/store/authStore";
-
+ 
 /**
  * Guards private pages by ensuring the user is authenticated.
  */

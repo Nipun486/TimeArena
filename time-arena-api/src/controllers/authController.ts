@@ -13,7 +13,7 @@ if (!JWT_SECRET) {
 
 function generateToken(user: UserDocument) {
   const payload = {
-    userId: user._id.toString()
+    id: user._id.toString(),
   };
 
   const options: SignOptions = {

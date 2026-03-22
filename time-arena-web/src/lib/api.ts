@@ -11,8 +11,18 @@ import type {
   User,
 } from "@/types";
 
+/** Backend is mounted at `/api` (see time-arena-api). Without this, requests hit Next.js and return 404. */
+function resolveApiBaseUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, "");
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:5000/api";
+  }
+  return "";
+}
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: resolveApiBaseUrl(),
   headers: { "Content-Type": "application/json" },
 });
 

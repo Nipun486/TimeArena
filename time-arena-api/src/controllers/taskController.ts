@@ -5,13 +5,13 @@ import { Task } from "../models/Task";
 import { calculateScore } from "../services/scoringEngine";
 import { User } from "../models/User";
 
-type AuthPayload = JwtPayload & { id?: string };
+type AuthPayload = JwtPayload & { id?: string; userId?: string };
 
 function getUserIdFromRequest(req: Request): string | undefined {
   const authPayload = req.user as AuthPayload | string | undefined;
 
   if (authPayload && typeof authPayload === "object") {
-    return authPayload.id;
+    return authPayload.id ?? authPayload.userId;
   }
 
   return undefined;
