@@ -18,7 +18,6 @@ const subtaskSchema = new mongoose.Schema(
       min: 0,
     },
   },
-  { _id: false },
 );
 
 const taskSchema = new mongoose.Schema(
@@ -103,7 +102,9 @@ const taskSchema = new mongoose.Schema(
   },
 );
 
-taskSchema.pre("save", function () {
+// Run before validation: `basePoints` is required, but Mongoose validates before
+// `pre("save")`, so assigning it only in `pre("save")` makes every create fail.
+taskSchema.pre("validate", function () {
   const task = this as mongoose.Document & {
     difficulty: "easy" | "medium" | "hard";
     basePoints: number;

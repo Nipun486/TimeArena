@@ -54,8 +54,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   loadTasks: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetchTasks(params);
-      set({ tasks: res?.data ?? [], isLoading: false });
+      const tasks = await fetchTasks(params);
+      set({
+        tasks: Array.isArray(tasks) ? tasks : [],
+        isLoading: false,
+      });
     } catch (err) {
       set({ error: getErrorMessage(err), isLoading: false });
     }
@@ -64,8 +67,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   loadTaskById: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetchTaskById(id);
-      set({ currentTask: res?.data ?? null, isLoading: false });
+      const task = await fetchTaskById(id);
+      set({ currentTask: task ?? null, isLoading: false });
     } catch (err) {
       set({ error: getErrorMessage(err), isLoading: false });
     }
@@ -74,9 +77,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   addTask: async (data) => {
     set({ isSubmitting: true, error: null });
     try {
-      const res = await createTask(data);
-      const created = res?.data;
-      if (created) {
+      const created = await createTask(data);
+      if (created?._id) {
         set((state) => ({
           tasks: [created, ...state.tasks],
           isSubmitting: false,
@@ -94,8 +96,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   beginTask: async (id) => {
     set({ isSubmitting: true, error: null });
     try {
-      const res = await startTask(id);
-      const updatedTask = res?.data ?? null;
+      const updatedTask = (await startTask(id)) ?? null;
       set((state) => ({
         currentTask: updatedTask,
         tasks: updatedTask
@@ -112,8 +113,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   toggleSubtaskDone: async (taskId, subtaskId) => {
     try {
-      const res = await toggleSubtask(taskId, subtaskId);
-      const updatedTask = res?.data ?? null;
+      const updatedTask = (await toggleSubtask(taskId, subtaskId)) ?? null;
       set((state) => ({
         currentTask: updatedTask,
         tasks: updatedTask
@@ -130,8 +130,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   finishTask: async (id) => {
     set({ isSubmitting: true, error: null });
     try {
-      const res = await completeTask(id);
-      const updatedTask = res?.data ?? null;
+      const updatedTask = (await completeTask(id)) ?? null;
       set((state) => ({
         currentTask: updatedTask,
         tasks: updatedTask

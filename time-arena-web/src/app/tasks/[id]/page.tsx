@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 import { useTaskStore } from "@/store/taskStore";
 import { useTask } from "@/hooks/useTask";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -35,12 +36,12 @@ export default function TaskDetailPage() {
     typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : undefined;
 
   const { currentTask, isLoading, error, loadTaskById } = useTaskStore(
-    (state) => ({
+    useShallow((state) => ({
       currentTask: state.currentTask,
       isLoading: state.isLoading,
       error: state.error,
       loadTaskById: state.loadTaskById,
-    })
+    }))
   );
 
   const {

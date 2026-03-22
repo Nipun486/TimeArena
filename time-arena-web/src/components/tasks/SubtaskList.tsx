@@ -1,5 +1,6 @@
 "use client";
 
+import { useShallow } from "zustand/react/shallow";
 import { useTaskStore } from "@/store/taskStore";
 import { useTask } from "@/hooks/useTask";
 
@@ -13,9 +14,11 @@ export function SubtaskList({
   taskId: string;
   disabled: boolean;
 }) {
-  const { currentTask } = useTaskStore((state) => ({
-    currentTask: state.currentTask,
-  }));
+  const { currentTask } = useTaskStore(
+    useShallow((state) => ({
+      currentTask: state.currentTask,
+    }))
+  );
 
   const { handleToggleSubtask } = useTask();
 
@@ -70,9 +73,9 @@ export function SubtaskList({
         {subtasks.length === 0 ? (
           <div className="text-gray-400 italic">No subtasks added</div>
         ) : (
-          subtasks.map((subtask) => (
+          subtasks.map((subtask, index) => (
             <label
-              key={subtask?._id}
+              key={subtask?._id ?? `subtask-${index}`}
               className={[
                 "flex items-center gap-3 px-3 py-3 bg-gray-700 rounded-lg",
                 disabled ? "" : "hover:bg-gray-600",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTaskStore } from "@/store/taskStore";
 import type { Task } from "@/types";
 
@@ -27,10 +28,12 @@ const titleCaseFromKebab = (value = ""): string => {
 export function TaskCard({ task }: { task?: Task }) {
   const router = useRouter();
 
-  const { removeTask, isSubmitting } = useTaskStore((state) => ({
-    removeTask: state.removeTask,
-    isSubmitting: state.isSubmitting,
-  }));
+  const { removeTask, isSubmitting } = useTaskStore(
+    useShallow((state) => ({
+      removeTask: state.removeTask,
+      isSubmitting: state.isSubmitting,
+    }))
+  );
 
   const difficulty = String(task?.difficulty ?? "easy").toLowerCase();
   const status = String(task?.status ?? "pending").toLowerCase();

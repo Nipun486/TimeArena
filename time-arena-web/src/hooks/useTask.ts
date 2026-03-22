@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 import { useTaskStore } from "@/store/taskStore";
 import { useAuthStore } from "@/store/authStore";
 import type { ScoreResult } from "@/types";
@@ -9,19 +10,23 @@ import type { ScoreResult } from "@/types";
 export function useTask() {
   const router = useRouter();
 
-  const { isAuthenticated, user } = useAuthStore((state) => ({
-    isAuthenticated: state.isAuthenticated,
-    user: state.user,
-  }));
+  const { isAuthenticated, user } = useAuthStore(
+    useShallow((state) => ({
+      isAuthenticated: state.isAuthenticated,
+      user: state.user,
+    }))
+  );
 
   const { beginTask, toggleSubtaskDone, finishTask, removeTask, isSubmitting } =
-    useTaskStore((state) => ({
-      beginTask: state.beginTask,
-      toggleSubtaskDone: state.toggleSubtaskDone,
-      finishTask: state.finishTask,
-      removeTask: state.removeTask,
-      isSubmitting: state.isSubmitting,
-    }));
+    useTaskStore(
+      useShallow((state) => ({
+        beginTask: state.beginTask,
+        toggleSubtaskDone: state.toggleSubtaskDone,
+        finishTask: state.finishTask,
+        removeTask: state.removeTask,
+        isSubmitting: state.isSubmitting,
+      }))
+    );
 
   const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
   const [showScore, setShowScore] = useState(false);

@@ -1,7 +1,6 @@
 import axios, { type AxiosError } from "axios";
 import type {
   Analytics,
-  ApiData,
   AuthApiResponse,
   CreateTaskPayload,
   LeaderboardResponse,
@@ -52,24 +51,24 @@ export const loginUser = (data: LoginCredentials) =>
 
 // Tasks
 export const fetchTasks = (params?: Record<string, string>) =>
-  api.get<ApiData<Task[]>>("/tasks", { params }).then((response) => response.data);
+  api.get<Task[]>("/tasks", { params }).then((response) => response.data);
 
 export const fetchTaskById = (id: string) =>
-  api.get<ApiData<Task>>(`/tasks/${id}`).then((response) => response.data);
+  api.get<Task>(`/tasks/${id}`).then((response) => response.data);
 
 export const createTask = (data: CreateTaskPayload) =>
-  api.post<ApiData<Task>>("/tasks", data).then((response) => response.data);
+  api.post<Task>("/tasks", data).then((response) => response.data);
 
 export const startTask = (id: string) =>
-  api.patch<ApiData<Task>>(`/tasks/${id}/start`).then((response) => response.data);
+  api.patch<Task>(`/tasks/${id}/start`).then((response) => response.data);
 
 export const toggleSubtask = (taskId: string, subtaskId: string) =>
   api
-    .patch<ApiData<Task>>(`/tasks/${taskId}/subtask/${subtaskId}`)
+    .patch<Task>(`/tasks/${taskId}/subtask/${subtaskId}`)
     .then((response) => response.data);
 
 export const completeTask = (id: string) =>
-  api.post<ApiData<Task>>(`/tasks/${id}/complete`).then((response) => response.data);
+  api.post<Task>(`/tasks/${id}/complete`).then((response) => response.data);
 
 export const deleteTask = (id: string) =>
   api.delete(`/tasks/${id}`).then((response) => response.data);
