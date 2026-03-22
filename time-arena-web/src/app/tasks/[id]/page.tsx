@@ -3,20 +3,20 @@
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useTaskStore } from "../../../../store/taskStore.js";
-import { useTask } from "../../../../hooks/useTask.js";
-import ProtectedRoute from "../../../../components/auth/ProtectedRoute.jsx";
-import Timer from "../../../../components/timer/Timer.jsx";
-import SubtaskList from "../../../../components/tasks/SubtaskList.jsx";
-import ScoreDisplay from "../../../../components/tasks/ScoreDisplay.jsx";
+import { useTaskStore } from "@/store/taskStore";
+import { useTask } from "@/hooks/useTask";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Timer from "@/components/timer/Timer";
+import SubtaskList from "@/components/tasks/SubtaskList";
+import ScoreDisplay from "@/components/tasks/ScoreDisplay";
 
-const capitalizeFirst = (value = "") => {
+const capitalizeFirst = (value = ""): string => {
   const s = String(value);
   if (!s) return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
-const titleCaseFromKebab = (value = "") => {
+const titleCaseFromKebab = (value = ""): string => {
   const s = String(value).replace(/-/g, " ").trim();
   if (!s) return "";
   return s
@@ -27,12 +27,12 @@ const titleCaseFromKebab = (value = "") => {
 
 /**
  * Task detail page showing full task info, timer, subtasks, and completion score.
- *
- * Fetches the task by URL param `id`, disables timer when not in-progress,
- * and overlays a score breakdown on completion.
  */
 export default function TaskDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const rawId = params?.id;
+  const id =
+    typeof rawId === "string" ? rawId : Array.isArray(rawId) ? rawId[0] : undefined;
 
   const { currentTask, isLoading, error, loadTaskById } = useTaskStore(
     (state) => ({
@@ -85,7 +85,7 @@ export default function TaskDetailPage() {
     []
   );
 
-  const handleTimerComplete = (_elapsedSeconds) => {
+  const handleTimerComplete = () => {
     if (!currentTask?._id) return;
     handleCompleteTask(currentTask._id);
   };
@@ -147,12 +147,12 @@ export default function TaskDetailPage() {
 
               <div className="flex flex-wrap items-center gap-2">
                 <span
-                  className={`${difficultyColors?.[difficulty] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
+                  className={`${difficultyColors[difficulty as keyof typeof difficultyColors] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
                 >
                   {capitalizeFirst(difficulty)}
                 </span>
                 <span
-                  className={`${statusColors?.[status] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
+                  className={`${statusColors[status as keyof typeof statusColors] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
                 >
                   {titleCaseFromKebab(status)}
                 </span>
@@ -172,10 +172,10 @@ export default function TaskDetailPage() {
             </div>
 
             <div className="flex gap-3 mt-6 flex-wrap items-center">
-              {status === "pending" ? (
+              {status === "pending" && currentTask._id ? (
                 <button
                   type="button"
-                  onClick={() => handleStartTask(currentTask._id)}
+                  onClick={() => handleStartTask(currentTask._id!)}
                   disabled={!!isSubmitting}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -183,10 +183,10 @@ export default function TaskDetailPage() {
                 </button>
               ) : null}
 
-              {!isTaskDone && status !== "in-progress" ? (
+              {!isTaskDone && status !== "in-progress" && currentTask._id ? (
                 <button
                   type="button"
-                  onClick={() => handleDeleteTask(currentTask._id)}
+                  onClick={() => handleDeleteTask(currentTask._id!)}
                   disabled={!!isSubmitting}
                   className="bg-gray-700 hover:bg-red-900 text-gray-400 hover:text-red-400 font-medium px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -208,7 +208,9 @@ export default function TaskDetailPage() {
                 disabled={timerDisabled}
               />
 
-              <SubtaskList taskId={currentTask._id} disabled={isTaskDone} />
+              {currentTask._id ? (
+                <SubtaskList taskId={currentTask._id} disabled={isTaskDone} />
+              ) : null}
             </div>
 
             {status === "completed" ? (
@@ -243,4 +245,3 @@ export default function TaskDetailPage() {
     </ProtectedRoute>
   );
 }
-

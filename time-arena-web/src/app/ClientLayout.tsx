@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { useAuthStore } from "../store/authStore.js";
-import Navbar from "../components/layout/Navbar.jsx";
-import Sidebar from "../components/layout/Sidebar.jsx";
+import { useAuthStore } from "@/store/authStore";
+import Navbar from "@/components/layout/Navbar";
+import Sidebar from "@/components/layout/Sidebar";
 
 const publicRoutes = ["/", "/auth/login", "/auth/register"];
 
@@ -13,7 +13,7 @@ const publicRoutes = ["/", "/auth/login", "/auth/register"];
  * - Public routes (`/`, `/auth/login`, `/auth/register`) render children only (no Navbar/Sidebar).
  * - All other routes render Navbar above a Sidebar + main content split.
  */
-export default function ClientLayout({ children }) {
+export default function ClientLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isPublicRoute = publicRoutes.includes(pathname);
 
@@ -21,6 +21,7 @@ export default function ClientLayout({ children }) {
 
   useEffect(() => {
     initializeAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, []);
 
   if (isPublicRoute) {
@@ -39,4 +40,3 @@ export default function ClientLayout({ children }) {
     </div>
   );
 }
-

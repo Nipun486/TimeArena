@@ -2,8 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-export function useTimer({ estimatedTime, onComplete } = {}) {
-  const intervalRef = useRef(null);
+export interface UseTimerOptions {
+  estimatedTime?: number;
+  onComplete?: (elapsedSeconds: number) => void;
+}
+
+export function useTimer({ estimatedTime, onComplete }: UseTimerOptions = {}) {
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -101,4 +106,3 @@ export function useTimer({ estimatedTime, onComplete } = {}) {
     reset,
   };
 }
-

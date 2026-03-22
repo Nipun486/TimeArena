@@ -1,20 +1,18 @@
 "use client";
 
-import { useTaskStore } from "../../store/taskStore.js";
-import { useTask } from "../../hooks/useTask.js";
+import { useTaskStore } from "@/store/taskStore";
+import { useTask } from "@/hooks/useTask";
 
 /**
- * Renders an interactive subtask checklist for the current task with:
- * - a completion percentage header,
- * - an animated progress bar,
- * - a completion factor preview (points multiplier/penalty),
- * - and a toggleable checklist of subtasks.
- *
- * @param {Object} props
- * @param {string} props.taskId - MongoDB _id of the task (used for subtask toggles).
- * @param {boolean} props.disabled - When true, disables toggling and removes hover affordances.
+ * Renders an interactive subtask checklist for the current task.
  */
-export function SubtaskList({ taskId, disabled }) {
+export function SubtaskList({
+  taskId,
+  disabled,
+}: {
+  taskId: string;
+  disabled: boolean;
+}) {
   const { currentTask } = useTaskStore((state) => ({
     currentTask: state.currentTask,
   }));

@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useTaskStore } from "../../store/taskStore.js";
+import { useTaskStore } from "@/store/taskStore";
+import type { CreateTaskPayload, TaskDifficulty } from "@/types";
+
+interface FormState {
+  title: string;
+  description: string;
+  estimatedTime: string;
+  difficulty: TaskDifficulty;
+  subtasks: Array<{ title: string; weight: number }>;
+}
 
 /**
  * Renders a form for creating a new task, including a dynamic subtask list builder.
@@ -11,17 +20,17 @@ export default function TaskForm() {
   const router = useRouter();
   const { addTask, isSubmitting, error } = useTaskStore();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormState>({
     title: "",
     description: "",
     estimatedTime: "",
     difficulty: "medium",
     subtasks: [],
   });
-  const [formErrors, setFormErrors] = useState({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [subtaskInput, setSubtaskInput] = useState("");
 
-  const difficultyPointsMap = {
+  const difficultyPointsMap: Record<TaskDifficulty, number> = {
     easy: 50,
     medium: 100,
     hard: 200,
@@ -35,15 +44,15 @@ export default function TaskForm() {
     setSubtaskInput("");
   };
 
-  const handleRemoveSubtask = (index) => {
+  const handleRemoveSubtask = (index: number) => {
     setFormData((prev) => ({
       ...prev,
       subtasks: prev.subtasks.filter((_, i) => i !== index),
     }));
   };
 
-  const validate = () => {
-    const nextErrors = {};
+  const validate = (): boolean => {
+    const nextErrors: Record<string, string> = {};
 
     if (!formData.title || !formData.title.trim()) {
       nextErrors.title = "Title is required";
@@ -67,7 +76,7 @@ export default function TaskForm() {
     return true;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
@@ -75,7 +84,7 @@ export default function TaskForm() {
       (s) => s?.title && String(s.title).trim()
     );
 
-    const taskData = {
+    const taskData: CreateTaskPayload = {
       title: formData.title.trim(),
       description: formData.description.trim(),
       estimatedTime: Number(formData.estimatedTime),
@@ -155,7 +164,10 @@ export default function TaskForm() {
         <select
           value={formData.difficulty}
           onChange={(e) =>
-            setFormData((p) => ({ ...p, difficulty: e.target.value }))
+            setFormData((p) => ({
+              ...p,
+              difficulty: e.target.value as TaskDifficulty,
+            }))
           }
           className="bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 w-full"
         >
@@ -234,4 +246,3 @@ export default function TaskForm() {
     </form>
   );
 }
-

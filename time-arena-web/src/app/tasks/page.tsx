@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTaskStore } from "../../../store/taskStore.js";
-import ProtectedRoute from "../../../components/auth/ProtectedRoute.jsx";
-import TaskCard from "../../../components/tasks/TaskCard.jsx";
-import TaskForm from "../../../components/tasks/TaskForm.jsx";
+import { useTaskStore } from "@/store/taskStore";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import TaskCard from "@/components/tasks/TaskCard";
+import TaskForm from "@/components/tasks/TaskForm";
 
 /**
  * Tasks page showing full task list, filters, and create task flow.
@@ -19,18 +19,18 @@ export default function TasksPage() {
     loadTasks();
   }, [loadTasks]);
 
-  const handleStatusFilter = (status) => {
+  const handleStatusFilter = (status: string) => {
     setFilters({ status });
   };
 
-  const handleDifficultyFilter = (difficulty) => {
+  const handleDifficultyFilter = (difficulty: string) => {
     setFilters({ difficulty });
   };
 
   const statusOptions = ["", "pending", "in-progress", "completed", "failed"];
   const difficultyOptions = ["", "easy", "medium", "hard"];
 
-  const formatStatusLabel = (status) => {
+  const formatStatusLabel = (status: string) => {
     if (!status) return "All Status";
     return status
       .split("-")
@@ -38,7 +38,7 @@ export default function TasksPage() {
       .join(" ");
   };
 
-  const formatDifficultyLabel = (difficulty) => {
+  const formatDifficultyLabel = (difficulty: string) => {
     if (!difficulty) return "All Difficulty";
     return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
   };

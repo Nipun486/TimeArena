@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ScoreResult, Task } from "@/types";
 
-export default function ScoreDisplay({ scoreResult, task }) {
+export default function ScoreDisplay({
+  scoreResult,
+  task,
+}: {
+  scoreResult: ScoreResult | null;
+  task?: Task | null;
+}) {
   const finalScore = Number(scoreResult?.finalScore ?? 0);
   const xpAwarded = Number(scoreResult?.xpAwarded ?? 0);
 
@@ -47,11 +54,12 @@ export default function ScoreDisplay({ scoreResult, task }) {
         : "1.0×";
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- count-up animation resets and ticks displayed score */
     if (!Number.isFinite(finalScore)) return;
 
+    const step = finalScore / 40;
     setDisplayedScore(0);
 
-    const step = finalScore / 40;
     if (step === 0) {
       setDisplayedScore(finalScore);
       return;
@@ -79,6 +87,7 @@ export default function ScoreDisplay({ scoreResult, task }) {
     }, 50);
 
     return () => clearInterval(intervalId);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [finalScore]);
 
   useEffect(() => {
@@ -89,12 +98,10 @@ export default function ScoreDisplay({ scoreResult, task }) {
   return (
     <div className="w-full max-w-2xl mx-auto px-6 py-8">
       <div className="space-y-8">
-        {/* SECTION 1 — Header */}
         <div className="text-2xl font-bold text-white text-center">
           🏆 TASK COMPLETE!
         </div>
 
-        {/* SECTION 2 — Score display */}
         <div className="space-y-2">
           <div
             className={[
@@ -110,7 +117,6 @@ export default function ScoreDisplay({ scoreResult, task }) {
           </div>
         </div>
 
-        {/* SECTION 3 — XP awarded */}
         <div className="text-center">
           {xpAwarded > 0 ? (
             <div className="text-purple-400 text-xl font-bold">
@@ -121,7 +127,6 @@ export default function ScoreDisplay({ scoreResult, task }) {
           )}
         </div>
 
-        {/* SECTION 4 — Factor breakdown (reveals after delay) */}
         <div
           className={[
             "transition-all duration-300",
@@ -165,4 +170,3 @@ export default function ScoreDisplay({ scoreResult, task }) {
     </div>
   );
 }
-

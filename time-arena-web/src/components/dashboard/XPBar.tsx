@@ -1,8 +1,8 @@
 "use client";
 
-import { useAuthStore } from "../../store/authStore.js";
+import { useAuthStore } from "@/store/authStore";
 
-function getLevelBadge(level) {
+function getLevelBadge(level: number): { name: string; color: string } {
   if (level === 0) return { name: "Newcomer", color: "text-gray-400" };
   if (level <= 5) return { name: "Bronze 🥉", color: "text-amber-600" };
   if (level <= 15) return { name: "Silver 🥈", color: "text-gray-300" };
@@ -13,12 +13,6 @@ function getLevelBadge(level) {
 
 /**
  * Dashboard XP/Level bar.
- *
- * XP logic:
- * - `totalXP` comes from `authStore` (`user?.totalXP ?? 0`)
- * - `currentLevel = Math.floor(totalXP / 100)` (each level = exactly 100 XP)
- * - `xpIntoLevel = totalXP % 100`
- * - `progressPercent = xpIntoLevel` (0..99; equals percent of level completed)
  */
 export default function XPBar() {
   const { user } = useAuthStore();

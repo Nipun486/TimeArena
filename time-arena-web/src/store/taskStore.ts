@@ -9,12 +9,38 @@ import {
   toggleSubtask,
   completeTask,
   deleteTask,
-} from "../lib/api.js";
+} from "@/lib/api";
+import type { CreateTaskPayload, Task } from "@/types";
 
-const getErrorMessage = (err) =>
-  err?.response?.data?.message || err?.message || "Something went wrong";
+const getErrorMessage = (err: unknown): string => {
+  const e = err as { response?: { data?: { message?: string } }; message?: string };
+  return e?.response?.data?.message || e?.message || "Something went wrong";
+};
 
-export const useTaskStore = create((set, get) => ({
+export interface TaskFilters {
+  status: string;
+  difficulty: string;
+}
+
+interface TaskState {
+  tasks: Task[];
+  currentTask: Task | null;
+  isLoading: boolean;
+  isSubmitting: boolean;
+  error: string | null;
+  filters: TaskFilters;
+  loadTasks: (params?: Record<string, string>) => Promise<void>;
+  loadTaskById: (id: string) => Promise<void>;
+  addTask: (data: CreateTaskPayload) => Promise<Task | undefined>;
+  beginTask: (id: string) => Promise<void>;
+  toggleSubtaskDone: (taskId: string, subtaskId: string) => Promise<void>;
+  finishTask: (id: string) => Promise<Task | null | undefined>;
+  removeTask: (id: string) => Promise<void>;
+  setFilters: (newFilters?: Partial<TaskFilters>) => Promise<void>;
+  clearError: () => void;
+}
+
+export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
   currentTask: null,
   isLoading: false,
@@ -25,7 +51,6 @@ export const useTaskStore = create((set, get) => ({
     difficulty: "",
   },
 
-  // Fetches tasks list (supports query params like filters).
   loadTasks: async (params = {}) => {
     set({ isLoading: true, error: null });
     try {
@@ -36,7 +61,6 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Fetches a single task and sets it as currentTask.
   loadTaskById: async (id) => {
     set({ isLoading: true, error: null });
     try {
@@ -47,7 +71,6 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Creates a new task, prepends it to tasks, and returns it (re-throws on error).
   addTask: async (data) => {
     set({ isSubmitting: true, error: null });
     try {
@@ -68,7 +91,6 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Starts a task, sets currentTask, and updates the matching task in tasks.
   beginTask: async (id) => {
     set({ isSubmitting: true, error: null });
     try {
@@ -88,7 +110,6 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Toggles a subtask instantly (no loading/submitting flags) and updates currentTask + tasks.
   toggleSubtaskDone: async (taskId, subtaskId) => {
     try {
       const res = await toggleSubtask(taskId, subtaskId);
@@ -106,7 +127,6 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Completes a task, updates state, returns the updated task (re-throws on error).
   finishTask: async (id) => {
     set({ isSubmitting: true, error: null });
     try {
@@ -128,7 +148,6 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Deletes a task, removes it from tasks, and clears currentTask if it was deleted.
   removeTask: async (id) => {
     set({ isSubmitting: true, error: null });
     try {
@@ -146,13 +165,11 @@ export const useTaskStore = create((set, get) => ({
     }
   },
 
-  // Updates filters, then re-fetches tasks immediately using the updated filters.
   setFilters: async (newFilters = {}) => {
     const nextFilters = { ...get().filters, ...newFilters };
     set({ filters: nextFilters });
     await get().loadTasks(nextFilters);
   },
 
-  // Clears the current error message.
   clearError: () => set({ error: null }),
 }));

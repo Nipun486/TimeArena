@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchLeaderboard } from "../../../lib/api.js";
-import { useAuthStore } from "../../../store/authStore.js";
-import ProtectedRoute from "../../../components/auth/ProtectedRoute.jsx";
+import { fetchLeaderboard } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import type { LeaderboardResponse } from "@/types";
 
 /**
  * Global leaderboard ranking users by total XP.
@@ -11,9 +12,9 @@ import ProtectedRoute from "../../../components/auth/ProtectedRoute.jsx";
 export default function LeaderboardPage() {
   const { user } = useAuthStore();
 
-  const [leaderboardData, setLeaderboardData] = useState(null);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const loadLeaderboard = async () => {
     try {
@@ -22,7 +23,7 @@ export default function LeaderboardPage() {
       const data = await fetchLeaderboard(50);
       setLeaderboardData(data);
     } catch (err) {
-      setError(err?.message || "Failed to load leaderboard. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to load leaderboard. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -30,7 +31,6 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     loadLeaderboard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentUserRank = useMemo(() => {
@@ -101,7 +101,7 @@ export default function LeaderboardPage() {
               const isCurrentUser = entry?.id === user?._id;
               const rowClass = isCurrentUser
                 ? "bg-blue-900 border-2 border-blue-500"
-                : entry?.rank <= 3
+                : entry?.rank && entry.rank <= 3
                   ? "bg-gray-800 border border-yellow-600/50"
                   : "bg-gray-800 border border-gray-700";
 
@@ -151,7 +151,7 @@ export default function LeaderboardPage() {
                     <div className="text-white font-bold">
                       {entry?.totalXP} XP
                     </div>
-                    {entry?.currentStreak > 0 ? (
+                    {entry?.currentStreak && entry.currentStreak > 0 ? (
                       <div className="text-orange-400 text-xs mt-0.5">
                         🔥 {entry?.currentStreak} day streak
                       </div>
@@ -166,4 +166,3 @@ export default function LeaderboardPage() {
     </ProtectedRoute>
   );
 }
-

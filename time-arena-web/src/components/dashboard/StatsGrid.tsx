@@ -1,15 +1,15 @@
+import type { Analytics } from "@/types";
+
 /**
  * StatsGrid (pure display component).
- *
- * @param {Object} props
- * @param {Object} [props.analytics] Analytics response from GET /api/users/me/analytics.
- * @param {Array<{date?: string, score: number}>} [props.analytics.weeklyScores] Array of daily scores for the week.
- * @param {number} [props.analytics.completionRate] Completion rate percentage (0-100).
- * @param {number} [props.analytics.focusHours] Total focused hours.
- * @param {number} [props.analytics.consistencyScore] Consistency percentage (0-100).
- * @param {boolean} props.isLoading True while analytics is being fetched.
  */
-export default function StatsGrid({ analytics, isLoading }) {
+export default function StatsGrid({
+  analytics,
+  isLoading,
+}: {
+  analytics: Analytics | null;
+  isLoading: boolean;
+}) {
   const stats = [
     {
       label: "Weekly Score",
@@ -55,7 +55,6 @@ export default function StatsGrid({ analytics, isLoading }) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, idx) => (
           <div
-            // eslint-disable-next-line react/no-array-index-key
             key={idx}
             className="bg-gray-800 rounded-xl p-6 animate-pulse border border-gray-700"
           >
@@ -101,4 +100,3 @@ export default function StatsGrid({ analytics, isLoading }) {
     </div>
   );
 }
-

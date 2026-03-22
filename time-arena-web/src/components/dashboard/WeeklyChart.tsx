@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   BarChart,
   Bar,
@@ -10,17 +9,30 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import type { Analytics } from "@/types";
 
-function getBarColor(score) {
+function getBarColor(score: number): string {
   if (score > 0) return "#3B82F6";
   if (score === 0) return "#374151";
   return "#EF4444";
 }
 
-function CustomTooltip({ active, payload }) {
+type ChartRow = {
+  date?: string;
+  score: number;
+  day: string;
+};
+
+function CustomTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: ReadonlyArray<{ value?: number; payload?: ChartRow }>;
+}) {
   if (active && payload && payload.length) {
     const value = payload[0]?.value ?? 0;
-    const day = payload[0]?.payload?.day ?? "";
+    const day = (payload[0]?.payload as ChartRow | undefined)?.day ?? "";
 
     const valueColor =
       value > 0 ? "text-blue-400" : value === 0 ? "text-gray-400" : "text-red-400";
@@ -36,10 +48,18 @@ function CustomTooltip({ active, payload }) {
   return null;
 }
 
-export default function WeeklyChart({ analytics, isLoading }) {
-  const chartData = (analytics?.weeklyScores ?? []).map((item) => ({
+export default function WeeklyChart({
+  analytics,
+  isLoading,
+}: {
+  analytics: Analytics | null;
+  isLoading: boolean;
+}) {
+  const chartData: ChartRow[] = (analytics?.weeklyScores ?? []).map((item) => ({
     ...item,
-    day: new Date(item.date).toLocaleDateString("en-US", { weekday: "short" }),
+    day: item.date
+      ? new Date(item.date).toLocaleDateString("en-US", { weekday: "short" })
+      : "",
   }));
 
   const totalWeeklyScore = chartData.reduce((sum, d) => sum + d.score, 0);
@@ -126,4 +146,3 @@ export default function WeeklyChart({ analytics, isLoading }) {
     </div>
   );
 }
-

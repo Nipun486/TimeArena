@@ -1,8 +1,12 @@
 "use client";
 
-import { useAuthStore } from "../../store/authStore.js";
+import { useAuthStore } from "@/store/authStore";
 
-function getStreakConfig(streak) {
+function getStreakConfig(streak: number): {
+  icon: string;
+  color: string;
+  message: string;
+} {
   if (streak === 0) {
     return {
       icon: "💀",
@@ -52,12 +56,6 @@ function getStreakConfig(streak) {
 
 /**
  * Dashboard streak card.
- *
- * - **Streak config**: computed via `getStreakConfig(currentStreak)` to pick an
- *   icon, a Tailwind color class, and a motivational message.
- * - **Seven day indicator**: builds a 7-boolean array filled from right-to-left,
- *   where the rightmost circle represents "today" and becomes active when
- *   `daysFromToday < currentStreak` (so a streak of 1 lights only the last circle).
  */
 export default function StreakBadge() {
   const { user } = useAuthStore();
@@ -107,7 +105,6 @@ export default function StreakBadge() {
         <div className="flex justify-between items-center">
           {sevenDayCircles.map((active, idx) => (
             <div
-              // eslint-disable-next-line react/no-array-index-key
               key={idx}
               className={[
                 "w-8 h-8 rounded-full transition-colors duration-300",
@@ -119,7 +116,6 @@ export default function StreakBadge() {
 
         <div className="flex justify-between mt-2">
           {["M", "T", "W", "T", "F", "S", "S"].map((d, idx) => (
-            // eslint-disable-next-line react/no-array-index-key
             <div key={idx} className="text-gray-600 text-xs text-center w-8">
               {d}
             </div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { useAuthStore } from "../../store/authStore.js";
+import { useAuthStore } from "@/store/authStore";
 
 /**
  * Top navigation bar shown on every protected page.
@@ -12,7 +12,7 @@ export default function Navbar() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
-  const level = user ? Math.floor(user.totalXP / 100) : 0;
+  const level = user ? Math.floor((user.totalXP ?? 0) / 100) : 0;
 
   const handleLogout = () => {
     logout();
@@ -30,11 +30,11 @@ export default function Navbar() {
       <div className="flex items-center gap-3">
         {user && (
           <>
-            <span className="text-sm text-white">👤 {user && user.username}</span>
+            <span className="text-sm text-white">👤 {user.username}</span>
             <span className="bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs">
               Lv.{level}
             </span>
-            <span className="text-sm text-gray-300">{user && user.totalXP} XP</span>
+            <span className="text-sm text-gray-300">{user.totalXP} XP</span>
             <button
               type="button"
               onClick={handleLogout}
@@ -48,4 +48,3 @@ export default function Navbar() {
     </nav>
   );
 }
-

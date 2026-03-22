@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useTaskStore } from "../../store/taskStore.js";
+import { useTaskStore } from "@/store/taskStore";
+import type { Task } from "@/types";
 
-const capitalizeFirst = (value = "") => {
+const capitalizeFirst = (value = ""): string => {
   const s = String(value);
   if (!s) return "";
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
-const titleCaseFromKebab = (value = "") => {
+const titleCaseFromKebab = (value = ""): string => {
   const s = String(value).replace(/-/g, " ").trim();
   if (!s) return "";
   return s
@@ -22,20 +23,8 @@ const titleCaseFromKebab = (value = "") => {
 
 /**
  * Renders a summary card for a single task.
- *
- * @param {{ task?: {
- *   _id?: string,
- *   title?: string,
- *   difficulty?: "easy"|"medium"|"hard"|string,
- *   status?: "pending"|"in-progress"|"completed"|"failed"|string,
- *   completionPercentage?: number,
- *   estimatedTime?: number,
- *   createdAt?: string|number|Date,
- *   finalScore?: number,
- *   xpAwarded?: number
- * } }} props
  */
-export function TaskCard({ task }) {
+export function TaskCard({ task }: { task?: Task }) {
   const router = useRouter();
 
   const { removeTask, isSubmitting } = useTaskStore((state) => ({
@@ -52,7 +41,7 @@ export function TaskCard({ task }) {
     return Math.max(0, Math.min(100, Math.round(n)));
   }, [task?.completionPercentage]);
 
-  const difficultyColors = useMemo(
+  const difficultyColors: Record<string, string> = useMemo(
     () => ({
       easy: "bg-green-900 text-green-300",
       medium: "bg-yellow-900 text-yellow-300",
@@ -61,7 +50,7 @@ export function TaskCard({ task }) {
     []
   );
 
-  const statusColors = useMemo(
+  const statusColors: Record<string, string> = useMemo(
     () => ({
       pending: "bg-gray-700 text-gray-300",
       "in-progress": "bg-blue-900 text-blue-300",
@@ -102,21 +91,20 @@ export function TaskCard({ task }) {
 
   const handlePrefetch = () => {
     if (!taskId) return;
-    router?.prefetch?.(`/tasks/${taskId}`);
+    router.prefetch(`/tasks/${taskId}`);
   };
 
   return (
     <div className="bg-gray-800 rounded-xl p-5 border border-gray-700 hover:border-blue-500 transition-colors duration-200 flex flex-col gap-3">
-      {/* Row 1 */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <span
-            className={`${difficultyColors?.[difficulty] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
+            className={`${difficultyColors[difficulty] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
           >
             {capitalizeFirst(difficulty)}
           </span>
           <span
-            className={`${statusColors?.[status] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
+            className={`${statusColors[status] ?? "bg-gray-700 text-gray-300"} text-xs font-medium px-2.5 py-1 rounded-full`}
           >
             {titleCaseFromKebab(status)}
           </span>
@@ -136,12 +124,10 @@ export function TaskCard({ task }) {
         ) : null}
       </div>
 
-      {/* Row 2 */}
       <div className="mt-3 text-lg font-bold text-white">
         {task?.title ?? "Untitled Task"}
       </div>
 
-      {/* Row 3 */}
       <div>
         <div className="text-xs text-gray-400 mb-1">
           {completionPercentage}% complete
@@ -154,7 +140,6 @@ export function TaskCard({ task }) {
         </div>
       </div>
 
-      {/* Row 4 */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="text-xs text-gray-400">
           ⏱ {task?.estimatedTime ?? 0} min
@@ -174,7 +159,6 @@ export function TaskCard({ task }) {
         ) : null}
       </div>
 
-      {/* Row 5 */}
       {taskId ? (
         <Link
           href={`/tasks/${taskId}`}

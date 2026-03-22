@@ -2,8 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTaskStore } from "../store/taskStore.js";
-import { useAuthStore } from "../store/authStore.js";
+import { useTaskStore } from "@/store/taskStore";
+import { useAuthStore } from "@/store/authStore";
+import type { ScoreResult } from "@/types";
 
 export function useTask() {
   const router = useRouter();
@@ -22,26 +23,26 @@ export function useTask() {
       isSubmitting: state.isSubmitting,
     }));
 
-  const [scoreResult, setScoreResult] = useState(null);
+  const [scoreResult, setScoreResult] = useState<ScoreResult | null>(null);
   const [showScore, setShowScore] = useState(false);
-  const [actionError, setActionError] = useState(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const handleStartTask = useCallback(
-    async (taskId) => {
+    async (taskId: string) => {
       setActionError(null);
       try {
         await beginTask(taskId);
         const storeError = useTaskStore.getState().error;
         if (storeError) setActionError(storeError);
       } catch (err) {
-        setActionError(err?.message || "Failed to start task");
+        setActionError(err instanceof Error ? err.message : "Failed to start task");
       }
     },
     [beginTask]
   );
 
   const handleCompleteTask = useCallback(
-    async (taskId) => {
+    async (taskId: string) => {
       setActionError(null);
       try {
         const updated = await finishTask(taskId);
@@ -54,14 +55,14 @@ export function useTask() {
         });
         setShowScore(true);
       } catch (err) {
-        setActionError(err?.message || "Failed to complete task");
+        setActionError(err instanceof Error ? err.message : "Failed to complete task");
       }
     },
     [finishTask]
   );
 
   const handleDeleteTask = useCallback(
-    async (taskId) => {
+    async (taskId: string) => {
       setActionError(null);
       try {
         await removeTask(taskId);
@@ -69,20 +70,23 @@ export function useTask() {
         if (storeError) setActionError(storeError);
         router.push("/tasks");
       } catch (err) {
-        setActionError(err?.message || "Failed to delete task");
+        setActionError(err instanceof Error ? err.message : "Failed to delete task");
       }
     },
     [removeTask, router]
   );
 
   const handleToggleSubtask = useCallback(
-    async (taskId, subtaskId) => {
+    async (taskId: string, subtaskId: string | undefined) => {
+      if (!subtaskId) return;
       try {
         await toggleSubtaskDone(taskId, subtaskId);
         const storeError = useTaskStore.getState().error;
         if (storeError) setActionError(storeError);
       } catch (err) {
-        setActionError(err?.message);
+        setActionError(
+          err instanceof Error ? err.message : "Failed to update subtask"
+        );
       }
     },
     [toggleSubtaskDone]
@@ -112,4 +116,3 @@ export function useTask() {
     handleToggleSubtask,
   };
 }
-

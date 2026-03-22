@@ -2,24 +2,25 @@
 
 import { useEffect, useState } from "react";
 
-import { useAuthStore } from "../../../store/authStore.js";
-import { fetchAnalytics } from "../../../lib/api.js";
+import { useAuthStore } from "@/store/authStore";
+import { fetchAnalytics } from "@/lib/api";
 
-import ProtectedRoute from "../../../components/auth/ProtectedRoute.jsx";
-import StatsGrid from "../../../components/dashboard/StatsGrid.jsx";
-import WeeklyChart from "../../../components/dashboard/WeeklyChart.jsx";
-import StreakBadge from "../../../components/dashboard/StreakBadge.jsx";
-import XPBar from "../../../components/dashboard/XPBar.jsx";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import StatsGrid from "@/components/dashboard/StatsGrid";
+import WeeklyChart from "@/components/dashboard/WeeklyChart";
+import StreakBadge from "@/components/dashboard/StreakBadge";
+import XPBar from "@/components/dashboard/XPBar";
+import type { Analytics } from "@/types";
 
 /**
  * Dashboard page showing user analytics, stats, streak, XP progress, and weekly performance.
  */
 export default function DashboardPage() {
-  const { user } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
 
-  const [analytics, setAnalytics] = useState(null);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const loadAnalytics = async () => {
     setIsLoading(true);
@@ -29,7 +30,7 @@ export default function DashboardPage() {
       const data = await fetchAnalytics();
       setAnalytics(data);
     } catch (err) {
-      setError(err?.message || "Failed to load analytics. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to load analytics. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -37,7 +38,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadAnalytics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -79,4 +79,3 @@ export default function DashboardPage() {
     </ProtectedRoute>
   );
 }
-

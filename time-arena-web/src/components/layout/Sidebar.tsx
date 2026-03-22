@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useAuthStore } from "../../store/authStore.js";
+import { useAuthStore } from "@/store/authStore";
 
 /**
  * Sidebar navigation shown on all protected pages.
@@ -51,7 +51,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {hasStreak && (
+      {hasStreak && user && (
         <div className="mt-6 border-t border-gray-700 px-4 py-4">
           <div className="text-sm text-orange-400">
             🔥 {user.currentStreak} day streak
