@@ -105,7 +105,7 @@ export default function TaskForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-2xl mx-auto bg-gray-800 rounded-xl p-8 space-y-6"
+      className="w-full bg-[#0f1729] border border-[#243252] rounded-b-2xl p-6 space-y-5"
     >
       <div className="space-y-2">
         <label className="text-gray-300 text-sm font-medium mb-2">
