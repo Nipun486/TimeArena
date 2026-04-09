@@ -177,7 +177,7 @@ export default function TasksPage() {
           onClick={() => setShowCreateForm(false)}
         >
           <div
-            className="w-full max-w-2xl max-h-[86vh] overflow-y-auto"
+            className="w-full max-w-2xl max-h-[86vh] overflow-y-auto scrollbar-hide"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border border-b-0 border-[#243252] rounded-t-2xl bg-[#101a2e]">
