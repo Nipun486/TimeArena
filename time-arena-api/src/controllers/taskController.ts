@@ -29,6 +29,9 @@ export async function createTask(req: Request, res: Response) {
       title,
       description,
       estimatedTime,
+      deadlineDate,
+      estimatedDays,
+      limitType: rawLimitType,
       difficulty,
       subtasks,
       // Explicitly ignore disallowed fields from req.body
@@ -36,53 +39,105 @@ export async function createTask(req: Request, res: Response) {
       finalScore: _ignoredFinalScore,
       status: _ignoredStatus,
       userId: _ignoredUserId,
+      actualTimeSpent: _ignoredActualTimeSpent,
+      actualDaysSpent: _ignoredActualDaysSpent,
     } = req.body ?? {};
 
-    const errors: string[] = [];
-
     if (!title || typeof title !== "string") {
-      errors.push("title is required and must be a string");
+      return res.status(400).json({ message: "Title is required" });
     }
 
-    if (
-      typeof estimatedTime !== "number" ||
-      Number.isNaN(estimatedTime) ||
-      estimatedTime < 0
-    ) {
-      errors.push("estimatedTime is required and must be a non-negative number");
+    if (!difficulty) {
+      return res.status(400).json({ message: "Difficulty is required" });
     }
 
-    if (
-      !difficulty ||
-      typeof difficulty !== "string" ||
-      !["easy", "medium", "hard"].includes(difficulty)
-    ) {
-      errors.push(
-        "difficulty is required and must be one of: easy, medium, hard",
-      );
+    let limitType: "time" | "day" = "time";
+    if (rawLimitType !== undefined) {
+      if (rawLimitType === "time" || rawLimitType === "day") {
+        limitType = rawLimitType;
+      } else {
+        return res.status(400).json({ message: "limitType must be time or day" });
+      }
     }
 
-    if (errors.length > 0) {
-      return res.status(400).json({
-        message: "Validation error",
-        errors,
-      });
-    }
-
-    const task = new Task({
+    const taskData: Record<string, unknown> = {
       title,
       description,
-      estimatedTime,
       difficulty,
-      subtasks: Array.isArray(subtasks) ? subtasks : [],
+      limitType,
       userId,
+      subtasks: Array.isArray(subtasks) ? subtasks : [],
       // basePoints, completionPercentage, status, finalScore are not accepted
       // from the client. basePoints and completionPercentage are set by the
       // pre-save hook, status defaults to "pending", and finalScore is only
       // set when the task is completed.
-    });
+    };
 
-    const createdTask = await task.save();
+    // Applies only to time-based tasks.
+    if (limitType === "time") {
+      if (estimatedTime === undefined || estimatedTime === null || estimatedTime === "") {
+        return res
+          .status(400)
+          .json({ message: "Estimated time is required for time-based tasks" });
+      }
+
+      const parsedEstimatedTime = Number(estimatedTime);
+      if (Number.isNaN(parsedEstimatedTime) || parsedEstimatedTime < 1) {
+        return res
+          .status(400)
+          .json({ message: "Estimated time must be at least 1" });
+      }
+
+      taskData.estimatedTime = parsedEstimatedTime;
+    }
+
+    // Applies only to day-based tasks.
+    if (limitType === "day") {
+      if (!deadlineDate) {
+        return res
+          .status(400)
+          .json({ message: "Deadline date is required for day-based tasks" });
+      }
+
+      if (estimatedDays === undefined || estimatedDays === null || estimatedDays === "") {
+        return res
+          .status(400)
+          .json({ message: "Estimated days is required for day-based tasks" });
+      }
+
+      const parsedEstimatedDays = Number(estimatedDays);
+      if (Number.isNaN(parsedEstimatedDays) || parsedEstimatedDays < 1) {
+        return res
+          .status(400)
+          .json({ message: "Estimated days must be at least 1" });
+      }
+
+      const parsedDeadline = new Date(deadlineDate);
+      if (Number.isNaN(parsedDeadline.getTime())) {
+        return res.status(400).json({ message: "Deadline date is required for day-based tasks" });
+      }
+
+      const deadlineUtcDateOnly = new Date(
+        Date.UTC(
+          parsedDeadline.getUTCFullYear(),
+          parsedDeadline.getUTCMonth(),
+          parsedDeadline.getUTCDate(),
+        ),
+      );
+      const todayUtcDateOnly = new Date();
+      todayUtcDateOnly.setUTCHours(0, 0, 0, 0);
+
+      if (deadlineUtcDateOnly < todayUtcDateOnly) {
+        return res
+          .status(400)
+          .json({ message: "Deadline date must be today or in the future" });
+      }
+
+      taskData.deadlineDate = new Date(deadlineDate);
+      taskData.estimatedDays = parsedEstimatedDays;
+    }
+
+    const createdTask = await Task.create(taskData);
 
     return res.status(201).json(createdTask);
   } catch (error) {
@@ -256,26 +311,31 @@ export async function completeTask(req: Request, res: Response) {
       return res.status(400).json({ message: "Task is not in progress" });
     }
 
-    const now = new Date();
     task.status = "completed";
-    task.endedAt = now;
+    task.endedAt = new Date();
 
-    if (task.startedAt) {
-      const diffMs = task.endedAt.getTime() - task.startedAt.getTime();
-      const minutes = Math.round(diffMs / 60000);
-      task.actualTimeSpent = Math.max(0, minutes);
+    if (task.limitType === "time") {
+      if (task.startedAt) {
+        const diffMs = task.endedAt.getTime() - task.startedAt.getTime();
+        task.actualTimeSpent = Math.round(diffMs / (1000 * 60));
+      } else {
+        task.actualTimeSpent = 0;
+      }
+    }
+
+    if (task.limitType === "day") {
+      task.actualTimeSpent = 0;
     }
 
     // First save to ensure pre-save hook finalizes completionPercentage
     await task.save();
 
-    const { finalScore, xpAwarded } = calculateScore({
-      basePoints: task.basePoints,
-      difficulty: task.difficulty,
-      completionPercentage: task.completionPercentage,
-      actualTimeSpent: task.actualTimeSpent,
-      estimatedTime: task.estimatedTime,
-    });
+    const result = calculateScore(task);
+    const { finalScore, xpAwarded, actualDaysSpent } = result;
+
+    if (task.limitType === "day" && result.actualDaysSpent !== null) {
+      task.actualDaysSpent = actualDaysSpent;
+    }
 
     task.finalScore = finalScore;
     task.xpAwarded = xpAwarded;
