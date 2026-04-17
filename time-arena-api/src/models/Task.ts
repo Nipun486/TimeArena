@@ -35,8 +35,48 @@ const taskSchema = new mongoose.Schema(
     estimatedTime: {
       // in minutes
       type: Number,
-      required: true,
+      required: [
+        function (this: { limitType?: "time" | "day" }) {
+          return this.limitType === "time";
+        },
+        "Estimated time is required for time-based tasks",
+      ],
       min: 0,
+    },
+    // Used to determine whether the task is limited by time or by days.
+    limitType: {
+      type: String,
+      enum: ["time", "day"],
+      default: "time",
+      required: true,
+    },
+    // Used only for day-based tasks to define the final deadline date.
+    deadlineDate: {
+      type: Date,
+      required: [
+        function (this: { limitType?: "time" | "day" }) {
+          return this.limitType === "day";
+        },
+        "Deadline date is required for day-based tasks",
+      ],
+      default: undefined,
+    },
+    // Used only for day-based tasks to define expected task duration in days.
+    estimatedDays: {
+      type: Number,
+      min: 1,
+      required: [
+        function (this: { limitType?: "time" | "day" }) {
+          return this.limitType === "day";
+        },
+        "Estimated days is required for day-based tasks",
+      ],
+      default: undefined,
+    },
+    // Used for day-based tasks and updated on completion by controller logic.
+    actualDaysSpent: {
+      type: Number,
+      default: 0,
     },
     actualTimeSpent: {
       // in minutes
@@ -101,6 +141,33 @@ const taskSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+taskSchema.pre("save", function () {
+  const task = this as mongoose.Document & {
+    limitType?: "time" | "day";
+    deadlineDate?: Date;
+    isNew: boolean;
+  };
+
+  if (task.limitType === "day" && task.deadlineDate && task.isNew) {
+    const deadline = new Date(task.deadlineDate);
+    const deadlineUtcDateOnly = Date.UTC(
+      deadline.getUTCFullYear(),
+      deadline.getUTCMonth(),
+      deadline.getUTCDate(),
+    );
+    const now = new Date();
+    const todayUtcDateOnly = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+    );
+
+    if (deadlineUtcDateOnly < todayUtcDateOnly) {
+      throw new Error("Deadline date must be in the future");
+    }
+  }
+});
 
 // Run before validation: `basePoints` is required, but Mongoose validates before
 // `pre("save")`, so assigning it only in `pre("save")` makes every create fail.
