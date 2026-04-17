@@ -5,7 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
+require("dotenv/config");
 const mongoUri = process.env.MONGODB_URI;
+console.log(mongoUri);
 if (mongoUri == null || mongoUri.trim() === "") {
     throw new Error("MONGODB_URI is not defined in environment variables");
 }
