@@ -61,15 +61,14 @@ const taskSchema = new mongoose.Schema(
       ],
       default: undefined,
     },
-    // Used only for day-based tasks to define expected task duration in days.
-    estimatedDays: {
-      type: Number,
-      min: 1,
+    // Used only for day-based tasks to define when effort starts.
+    startingDate: {
+      type: Date,
       required: [
         function (this: { limitType?: "time" | "day" }) {
           return this.limitType === "day";
         },
-        "Estimated days is required for day-based tasks",
+        "Starting date is required for day-based tasks",
       ],
       default: undefined,
     },

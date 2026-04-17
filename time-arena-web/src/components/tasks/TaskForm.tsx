@@ -8,7 +8,10 @@ import type { CreateTaskPayload, TaskDifficulty } from "@/types";
 interface FormState {
   title: string;
   description: string;
+  limitType: "time" | "day";
   estimatedTime: string;
+  deadlineDate: string;
+  startingDate: string;
   difficulty: TaskDifficulty;
   subtasks: Array<{ title: string; weight: number }>;
 }
@@ -23,7 +26,10 @@ export default function TaskForm() {
   const [formData, setFormData] = useState<FormState>({
     title: "",
     description: "",
+    limitType: "time",
     estimatedTime: "",
+    deadlineDate: "",
+    startingDate: "",
     difficulty: "medium",
     subtasks: [],
   });
@@ -35,6 +41,7 @@ export default function TaskForm() {
     medium: 100,
     hard: 200,
   };
+  const todayDate = new Date().toISOString().split("T")[0];
 
   const handleAddSubtask = () => {
     if (!subtaskInput || !subtaskInput.trim()) return;
@@ -51,6 +58,20 @@ export default function TaskForm() {
     }));
   };
 
+  const handleLimitTypeChange = (limitType: "time" | "day") => {
+    setFormData((prev) => ({ ...prev, limitType }));
+    setFormErrors((prev) => {
+      const next = { ...prev };
+      if (limitType === "time") {
+        delete next.deadlineDate;
+        delete next.startingDate;
+      } else {
+        delete next.estimatedTime;
+      }
+      return next;
+    });
+  };
+
   const validate = (): boolean => {
     const nextErrors: Record<string, string> = {};
 
@@ -58,9 +79,23 @@ export default function TaskForm() {
       nextErrors.title = "Title is required";
     }
 
-    const minutes = Number(formData.estimatedTime);
-    if (!formData.estimatedTime || Number.isNaN(minutes) || minutes < 1) {
-      nextErrors.estimatedTime = "Enter at least 1 minute";
+    if (formData.limitType === "time") {
+      const minutes = Number(formData.estimatedTime);
+      if (!formData.estimatedTime || Number.isNaN(minutes) || minutes < 1) {
+        nextErrors.estimatedTime = "Enter at least 1 minute";
+      }
+    }
+
+    if (formData.limitType === "day") {
+      if (!formData.deadlineDate) {
+        nextErrors.deadlineDate = "Deadline date is required";
+      } else if (formData.deadlineDate < todayDate) {
+        nextErrors.deadlineDate = "Deadline must be today or in the future";
+      }
+
+      if (!formData.startingDate) {
+        nextErrors.startingDate = "Starting date is required";
+      }
     }
 
     if (!["easy", "medium", "hard"].includes(formData.difficulty)) {
@@ -84,13 +119,26 @@ export default function TaskForm() {
       (s) => s?.title && String(s.title).trim()
     );
 
-    const taskData: CreateTaskPayload = {
+    const commonTaskData = {
       title: formData.title.trim(),
       description: formData.description.trim(),
-      estimatedTime: Number(formData.estimatedTime),
       difficulty: formData.difficulty,
       subtasks: filteredSubtasks,
     };
+
+    const taskData: CreateTaskPayload =
+      formData.limitType === "time"
+        ? {
+            ...commonTaskData,
+            limitType: "time",
+            estimatedTime: Number(formData.estimatedTime),
+          }
+        : {
+            ...commonTaskData,
+            limitType: "day",
+            deadlineDate: formData.deadlineDate,
+            startingDate: formData.startingDate,
+          };
 
     try {
       const newTask = await addTask(taskData);
@@ -140,25 +188,6 @@ export default function TaskForm() {
 
       <div className="space-y-2">
         <label className="text-gray-300 text-sm font-medium mb-2">
-          Estimated Time (minutes)
-        </label>
-        <input
-          type="number"
-          min={1}
-          value={formData.estimatedTime}
-          onChange={(e) =>
-            setFormData((p) => ({ ...p, estimatedTime: e.target.value }))
-          }
-          className="bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 w-full"
-          placeholder="30"
-        />
-        {formErrors.estimatedTime ? (
-          <p className="text-red-400 text-sm">{formErrors.estimatedTime}</p>
-        ) : null}
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-gray-300 text-sm font-medium mb-2">
           Difficulty
         </label>
         <select
@@ -178,10 +207,110 @@ export default function TaskForm() {
         <p className="text-blue-400 text-sm">
           ⚡ {difficultyPointsMap[formData.difficulty]} base points
         </p>
+        {formData.limitType === "day" ? (
+          <p className="text-violet-400 text-xs italic">
+            📅 Day-based scoring - deadline performance replaces timer
+          </p>
+        ) : null}
         {formErrors.difficulty ? (
           <p className="text-red-400 text-sm">{formErrors.difficulty}</p>
         ) : null}
       </div>
+
+      <div className="space-y-2">
+        <label className="text-[#7C6FAD] text-sm font-medium mb-2">
+          Limit Type
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleLimitTypeChange("time")}
+            className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all duration-200 ${
+              formData.limitType === "time"
+                ? "bg-violet-700 text-violet-100 border-violet-500"
+                : "bg-[#1A1626] text-[#7C6FAD] border-[#2A2240] hover:border-violet-700"
+            }`}
+          >
+            ⏱ Time Limit
+          </button>
+          <button
+            type="button"
+            onClick={() => handleLimitTypeChange("day")}
+            className={`flex-1 py-3 rounded-xl border font-medium text-sm transition-all duration-200 ${
+              formData.limitType === "day"
+                ? "bg-violet-700 text-violet-100 border-violet-500"
+                : "bg-[#1A1626] text-[#7C6FAD] border-[#2A2240] hover:border-violet-700"
+            }`}
+          >
+            📅 Day Limit
+          </button>
+        </div>
+      </div>
+
+      {/* Time limit fields (shown when limitType is "time") */}
+      {formData.limitType === "time" ? (
+        <div className="space-y-2">
+          <label className="text-gray-300 text-sm font-medium mb-2">
+            Estimated Time (minutes)
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={formData.estimatedTime}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, estimatedTime: e.target.value }))
+            }
+            className="bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 w-full"
+            placeholder="30"
+          />
+          {formErrors.estimatedTime ? (
+            <p className="text-red-400 text-sm">{formErrors.estimatedTime}</p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Day limit fields (shown when limitType is "day") */}
+      {formData.limitType === "day" ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[#7C6FAD] text-sm font-medium mb-2">
+              Deadline Date
+            </label>
+            <input
+              type="date"
+              min={todayDate}
+              value={formData.deadlineDate}
+              onChange={(e) =>
+                setFormData((p) => ({ ...p, deadlineDate: e.target.value }))
+              }
+              className="bg-[#1A1626] text-violet-100 border border-[#2A2240] rounded-lg px-4 py-3 w-full"
+            />
+            {formErrors.deadlineDate ? (
+              <p className="text-red-400 text-sm">{formErrors.deadlineDate}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[#7C6FAD] text-sm font-medium mb-2">
+              Starting Date
+            </label>
+            <input
+              type="date"
+              value={formData.startingDate}
+              onChange={(e) =>
+                setFormData((p) => ({ ...p, startingDate: e.target.value }))
+              }
+              className="bg-[#1A1626] text-violet-100 border border-[#2A2240] rounded-lg px-4 py-3 w-full"
+            />
+            <p className="text-[#7C6FAD] text-xs mt-1">
+              When will you start this task?
+            </p>
+            {formErrors.startingDate ? (
+              <p className="text-red-400 text-sm">{formErrors.startingDate}</p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <div className="space-y-2">
         <label className="text-gray-300 text-sm font-medium mb-2">

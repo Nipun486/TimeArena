@@ -25,13 +25,18 @@ function getDayFactor(task: { deadlineDate?: string | Date | null; endedAt?: str
 /**
  * Calculates actual calendar days spent between task creation and completion.
  *
- * @param task - The task object containing `createdAt` and `endedAt`.
+ * @param task - The task object containing `startingDate`/`createdAt` and `endedAt`.
  * @returns Rounded-up total days spent, or 0 when unavailable.
  */
-function getActualDaysSpent(task: { createdAt?: string | Date | null; endedAt?: string | Date | null }): number {
-  if (!task.createdAt || !task.endedAt) return 0;
+function getActualDaysSpent(task: {
+  startingDate?: string | Date | null;
+  createdAt?: string | Date | null;
+  endedAt?: string | Date | null;
+}): number {
+  const startedFrom = task.startingDate ?? task.createdAt;
+  if (!startedFrom || !task.endedAt) return 0;
 
-  const diffMs = new Date(task.endedAt).getTime() - new Date(task.createdAt).getTime();
+  const diffMs = new Date(task.endedAt).getTime() - new Date(startedFrom).getTime();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
@@ -46,6 +51,7 @@ function getActualDaysSpent(task: { createdAt?: string | Date | null; endedAt?: 
  * @param task.estimatedTime - The estimated time for the task.
  * @param task.limitType - The task limit type (`"time"` or `"day"`). Missing defaults to time logic.
  * @param task.deadlineDate - The task deadline date used by day-based scoring.
+ * @param task.startingDate - The intended start date used by day-based scoring.
  * @param task.createdAt - The task creation date used for actual day computation.
  * @param task.endedAt - The task completion date used by day-based scoring.
  *
@@ -61,6 +67,7 @@ export function calculateScore(task: {
   estimatedTime?: number | null;
   limitType?: string | null;
   deadlineDate?: string | Date | null;
+  startingDate?: string | Date | null;
   createdAt?: string | Date | null;
   endedAt?: string | Date | null;
 }): { finalScore: number; xpAwarded: number; actualDaysSpent: number | null } {

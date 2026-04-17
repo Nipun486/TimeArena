@@ -8,6 +8,7 @@ import { useTaskStore } from "@/store/taskStore";
 import { useTask } from "@/hooks/useTask";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Timer from "@/components/timer/Timer";
+import DayTracker from "@/components/timer/DayTracker";
 import SubtaskList from "@/components/tasks/SubtaskList";
 import ScoreDisplay from "@/components/tasks/ScoreDisplay";
 
@@ -61,11 +62,13 @@ export default function TaskDetailPage() {
 
   const status = String(currentTask?.status ?? "pending").toLowerCase();
   const difficulty = String(currentTask?.difficulty ?? "easy").toLowerCase();
+  const limitType = currentTask?.limitType === "day" ? "day" : "time";
 
   const isTaskActive = currentTask?.status === "in-progress";
   const isTaskDone =
     currentTask?.status === "completed" || currentTask?.status === "failed";
   const timerDisabled = !isTaskActive;
+  const dayTrackerDisabled = !isTaskActive || isTaskDone;
 
   const difficultyColors = useMemo(
     () => ({
@@ -161,9 +164,26 @@ export default function TaskDetailPage() {
             </div>
 
             <div className="flex gap-6 mt-4 flex-wrap">
-              <div className="text-gray-400 text-sm">
-                ⏱ {currentTask?.estimatedTime ?? 0} min estimated
-              </div>
+              {limitType === "time" ? (
+                <div className="text-gray-400 text-sm">
+                  ⏱ {currentTask?.estimatedTime ?? 0} min estimated
+                </div>
+              ) : (
+                <>
+                  <div className="text-gray-400 text-sm">
+                    🗓 Start:{" "}
+                    {currentTask?.startingDate
+                      ? new Date(currentTask.startingDate).toLocaleDateString()
+                      : "--"}
+                  </div>
+                  <div className="text-gray-400 text-sm">
+                    🏁 End:{" "}
+                    {currentTask?.deadlineDate
+                      ? new Date(currentTask.deadlineDate).toLocaleDateString()
+                      : "--"}
+                  </div>
+                </>
+              )}
               <div className="text-gray-400 text-sm">
                 📊 {currentTask?.basePoints ?? 0} base points
               </div>
@@ -203,11 +223,23 @@ export default function TaskDetailPage() {
             ) : null}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-              <Timer
-                estimatedTime={currentTask.estimatedTime}
-                onComplete={handleTimerComplete}
-                disabled={timerDisabled}
-              />
+              {limitType === "time" ? (
+                <Timer
+                  estimatedTime={currentTask.estimatedTime}
+                  onComplete={handleTimerComplete}
+                  disabled={timerDisabled}
+                />
+              ) : (
+                <DayTracker
+                  startingDate={currentTask.startingDate}
+                  deadlineDate={currentTask.deadlineDate}
+                  actualDaysSpent={currentTask.actualDaysSpent}
+                  onComplete={
+                    currentTask._id ? () => handleCompleteTask(currentTask._id!) : undefined
+                  }
+                  disabled={dayTrackerDisabled}
+                />
+              )}
 
               {currentTask._id ? (
                 <SubtaskList taskId={currentTask._id} disabled={isTaskDone} />
@@ -236,7 +268,9 @@ export default function TaskDetailPage() {
                 </div>
 
                 <div className="text-gray-400 text-sm mt-3">
-                  Actual time: {currentTask?.actualTimeSpent ?? 0} min
+                  {limitType === "time"
+                    ? `Actual time: ${currentTask?.actualTimeSpent ?? 0} min`
+                    : `Actual days spent: ${currentTask?.actualDaysSpent ?? 0} day(s)`}
                 </div>
               </div>
             ) : null}

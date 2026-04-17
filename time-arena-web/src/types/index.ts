@@ -15,15 +15,19 @@ export interface Task {
   title?: string;
   description?: string;
   difficulty?: TaskDifficulty | string;
+  limitType?: "time" | "day";
   status?: TaskStatus | string;
   completionPercentage?: number;
   estimatedTime?: number;
+  deadlineDate?: string | number | Date;
+  startingDate?: string | number | Date;
   createdAt?: string | number | Date;
   finalScore?: number;
   xpAwarded?: number;
   subtasks?: Subtask[];
   basePoints?: number;
   actualTimeSpent?: number;
+  actualDaysSpent?: number;
 }
 
 export interface User {
@@ -74,13 +78,25 @@ export interface RegisterPayload {
   password: string;
 }
 
-export interface CreateTaskPayload {
+interface CreateTaskPayloadBase {
   title: string;
   description: string;
-  estimatedTime: number;
   difficulty: TaskDifficulty;
   subtasks: Array<{ title: string; weight: number }>;
 }
+
+type TimeLimitTaskPayload = CreateTaskPayloadBase & {
+  limitType: "time";
+  estimatedTime: number;
+};
+
+type DayLimitTaskPayload = CreateTaskPayloadBase & {
+  limitType: "day";
+  deadlineDate: string;
+  startingDate: string;
+};
+
+export type CreateTaskPayload = TimeLimitTaskPayload | DayLimitTaskPayload;
 
 export interface AuthApiResponse {
   token: string;

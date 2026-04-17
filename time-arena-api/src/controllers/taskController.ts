@@ -30,7 +30,7 @@ export async function createTask(req: Request, res: Response) {
       description,
       estimatedTime,
       deadlineDate,
-      estimatedDays,
+      startingDate,
       limitType: rawLimitType,
       difficulty,
       subtasks,
@@ -99,17 +99,10 @@ export async function createTask(req: Request, res: Response) {
           .json({ message: "Deadline date is required for day-based tasks" });
       }
 
-      if (estimatedDays === undefined || estimatedDays === null || estimatedDays === "") {
+      if (!startingDate) {
         return res
           .status(400)
-          .json({ message: "Estimated days is required for day-based tasks" });
-      }
-
-      const parsedEstimatedDays = Number(estimatedDays);
-      if (Number.isNaN(parsedEstimatedDays) || parsedEstimatedDays < 1) {
-        return res
-          .status(400)
-          .json({ message: "Estimated days must be at least 1" });
+          .json({ message: "Starting date is required for day-based tasks" });
       }
 
       const parsedDeadline = new Date(deadlineDate);
@@ -133,8 +126,29 @@ export async function createTask(req: Request, res: Response) {
           .json({ message: "Deadline date must be today or in the future" });
       }
 
+      const parsedStartingDate = new Date(startingDate);
+      if (Number.isNaN(parsedStartingDate.getTime())) {
+        return res
+          .status(400)
+          .json({ message: "Starting date is required for day-based tasks" });
+      }
+
+      const startingUtcDateOnly = new Date(
+        Date.UTC(
+          parsedStartingDate.getUTCFullYear(),
+          parsedStartingDate.getUTCMonth(),
+          parsedStartingDate.getUTCDate(),
+        ),
+      );
+
+      if (startingUtcDateOnly > deadlineUtcDateOnly) {
+        return res
+          .status(400)
+          .json({ message: "Starting date cannot be after deadline date" });
+      }
+
       taskData.deadlineDate = new Date(deadlineDate);
-      taskData.estimatedDays = parsedEstimatedDays;
+      taskData.startingDate = parsedStartingDate;
     }
 
     const createdTask = await Task.create(taskData);
@@ -333,8 +347,8 @@ export async function completeTask(req: Request, res: Response) {
     const result = calculateScore(task);
     const { finalScore, xpAwarded, actualDaysSpent } = result;
 
-    if (task.limitType === "day" && result.actualDaysSpent !== null) {
-      task.actualDaysSpent = actualDaysSpent;
+    if (task.limitType === "day") {
+      task.actualDaysSpent = actualDaysSpent ?? 0;
     }
 
     task.finalScore = finalScore;
